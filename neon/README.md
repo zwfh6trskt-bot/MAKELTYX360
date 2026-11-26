@@ -13,3 +13,7 @@ Ajouter un admin (Neon Console > SQL Editor) : créer le compte dans Auth > User
 `insert into public.admins(email) values ('email@exemple.com');`
 
 Horaires et seuil : `update public.settings set open_min = 480, close_min = 720, goal = 10;` (minutes depuis minuit, heure d'Alger).
+
+Ouvrir exceptionnellement plus tard aujourd'hui (ex. jusqu'à minuit) :
+`update public.settings set extra_date = (now() at time zone 'Africa/Algiers')::date, extra_close_min = 1440;`
+Le lendemain, l'horaire normal revient tout seul.

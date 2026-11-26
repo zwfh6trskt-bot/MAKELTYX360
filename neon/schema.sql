@@ -10,7 +10,9 @@ create table if not exists public.settings (
   id        boolean primary key default true check (id),
   open_min  int not null default 480 check (open_min between 0 and 1439),   -- 08h00
   close_min int not null default 720 check (close_min between 1 and 1440),  -- 12h00
-  goal      int not null default 10                                          -- seuil livraison gratuite
+  goal      int not null default 10,                                         -- seuil livraison gratuite
+  extra_date date,                 -- jour exceptionnel (heure d'Alger)
+  extra_close_min int check (extra_close_min between 1 and 1440)  -- fermeture ce jour-là
 );
 insert into public.settings default values on conflict do nothing;
 
@@ -77,9 +79,16 @@ language sql stable security definer set search_path = public as $$
     where u.id::text = auth.user_id()::text);
 $$;
 
+-- Fermeture du jour : exceptionnelle si extra_date = aujourd'hui, sinon close_min.
+create or replace function public.close_min_today() returns int
+language sql stable security definer set search_path = public as $$
+  select case when extra_date = (now() at time zone 'Africa/Algiers')::date and extra_close_min is not null
+              then extra_close_min else close_min end from public.settings;
+$$;
+
 create or replace function public.shop_status() returns json
 language sql stable security definer set search_path = public as $$
-  select json_build_object('now', now(), 'open_min', open_min, 'close_min', close_min) from public.settings;
+  select json_build_object('now', now(), 'open_min', open_min, 'close_min', public.close_min_today()) from public.settings;
 $$;
 
 -- Compteur public : renvoie UNIQUEMENT un nombre.
@@ -96,7 +105,7 @@ declare
 begin
   select * into s from public.settings;
   m := extract(hour from now() at time zone 'Africa/Algiers')::int * 60 + extract(minute from now() at time zone 'Africa/Algiers')::int;
-  if m < s.open_min or m >= s.close_min then raise exception 'SHOP_CLOSED'; end if;
+  if m < s.open_min or m >= public.close_min_today() then raise exception 'SHOP_CLOSED'; end if;
 
   p_first := btrim(coalesce(p_first,'')); p_last := btrim(coalesce(p_last,''));
   p_phone := regexp_replace(coalesce(p_phone,''), '[\s.-]', '', 'g');

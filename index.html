@@ -188,7 +188,7 @@ document.addEventListener("click",async e=>{const b=e.target.closest("[data-b]")
 document.addEventListener("input",e=>{if(e.target.dataset.f)f[e.target.dataset.f]=e.target.value;if(e.target.id=="day"){day=e.target.value;renderAdmin()}});
 function route(){const a=location.hash=="#admin";if(!a)loadCount();document.body.classList.toggle("adm",a);["#stu","#tabs","#grid","#bar","#ov"].forEach(s=>$(s).hidden=a);$("#adm").hidden=!a;if(a)adminInit();else render()}
 addEventListener("hashchange",route);
-(async()=>{route();await Promise.all([sync(),loadProducts()]);if(location.hash!="#admin")render();let was=isOpen();setInterval(()=>{const n=isOpen();if(n!=was){was=n;if(location.hash!="#admin")render()}},3000);const awake=()=>{if(document.hidden)return false;const h=+new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Algiers",hour:"2-digit",hourCycle:"h23"}).format(new Date(Date.now()+off));return h>=7&&h<16};let tk=0;
+(async()=>{route();await Promise.all([sync(),loadProducts()]);if(location.hash!="#admin")render();let was=isOpen();setInterval(()=>{const n=isOpen();if(n!=was){was=n;if(location.hash!="#admin")render()}},3000);const awake=()=>{if(document.hidden)return false;const h=+new Intl.DateTimeFormat("en-GB",{timeZone:"Africa/Algiers",hour:"2-digit",hourCycle:"h23"}).format(new Date(Date.now()+off));return h>=7&&(h<16||h*60<CM)};let tk=0;
  setInterval(()=>{if(!awake())return;tk++;if(tk%6==0)sync();if(location.hash=="#admin"){if(isAdm)loadOrders()}else if(tk%3==0)loadCount()},10000);
  document.addEventListener("visibilitychange",()=>{if(document.hidden)return;if(location.hash=="#admin"){if(isAdm)loadOrders()}else loadCount()})})();
 
